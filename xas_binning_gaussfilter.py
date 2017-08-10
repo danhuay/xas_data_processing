@@ -25,7 +25,7 @@ def K2E(k, K_edge):
     e_val = k ** 2.0 * h_bar ** 2 / (2 * m) + K_edge
     return e_val
 
-def bin_cal(E2K, K2E, rawdata, edge):
+def bin_cal(rawdata, edge):
     #create binning left edge, DEFAULT 30,50,10,0.2,0.04
     bin_edges = list()
     pre_edge_range = 30
@@ -62,7 +62,7 @@ def orig_header(file):
     return header
 
 def split_data(rawdata, header):
-    trigger = rawdata[:, header.index("pba2_adc7")] > 1
+    trigger = rawdata[:, header.index("pba2_adc7")] > 0
     lighton = rawdata[trigger]
     lightoff = rawdata[~trigger]
     return lighton, lightoff
@@ -74,7 +74,7 @@ def gaussian(raw_col, FWHM, x0): #FWHM = bin size, (= 10,0.2,0.04...)
     gauss_filter_col = gauss_filter_col / np.sum(gauss_filter_col) #normalized to 1
     return gauss_filter_col
 
-def data_binning(E2K, K2E, gaussian, rawdata, K_edge):
+def data_binning(rawdata, K_edge):
     bin_label, bin_diff = bin_cal(E2K, K2E, rawdata, K_edge)
     gauss_filter = np.empty([len(rawdata[:,1]),len(bin_label)])
     for i in range(len(bin_label)):
@@ -103,8 +103,8 @@ if __name__ == "__main__"
 
         # Data Binning
         K_edge = 7715 #Ti, 7709 Co, 5465 V, 4966 Ti, 9659 Zn
-        binned_lighton = data_binning(E2K, K2E, gaussian, lighton, K_edge)
-        binned_lightoff = data_binning(E2K, K2E, gaussian, lightoff, K_edge)
+        binned_lighton = data_binning(lighton, K_edge)
+        binned_lightoff = data_binning(lightoff, K_edge)
 
         # Saving and Plotting Data
         np.savetxt('ON_%s binned.dat' % file, binned_lighton, header = ' '.join(header))
